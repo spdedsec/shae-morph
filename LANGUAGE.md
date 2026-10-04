@@ -1,6 +1,8 @@
-# The Shae Programming Language
+# The Shae Morph Programming Language
 
-> **A modern language for structural data transformation and JSON plumbing.**
+> **A modern domain-specific language for structural data transformation and JSON plumbing.**
+
+*(Note: **Shae Morph** is the specialized data-plumbing DSL. The upcoming general-purpose language for web applications and systems will be named **Shae**.)*
 
 ---
 

@@ -1,14 +1,14 @@
 [package]
-name = "shae"
+name = "shae-morph"
 version = "0.1.0"
 edition = "2024"
 
 [[bin]]
-name = "shae"
+name = "shae-morph"
 path = "src/main.rs"
 
 [lib]
-name = "shae"
+name = "shae_morph"
 path = "src/lib.rs"
 
 [dependencies]

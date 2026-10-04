@@ -1,32 +1,33 @@
 use clap::{Parser, Subcommand};
-use shae::transform;
+use shae_morph::transform;
 use std::fs;
 use std::io::{self, IsTerminal, Read};
 use std::path::PathBuf;
 use std::process;
 
 const BANNER: &str = r#"
-   ____  _                 
-  / ___|| |__   __ _  ___  
-  \___ \| '_ \ / _` |/ _ \ 
-   ___) | | | | (_| |  __/ 
-  |____/|_| |_|\__,_|\___| 
+   ____  _                   __  __                 _     
+  / ___|| |__   __ _   ___  |  \/  | ___  _ __ _ __ | |__  
+  \___ \| '_ \ / _` | / _ \ | |\/| |/ _ \| '__| '_ \| '_ \ 
+   ___) | | | | (_| ||  __/ | |  | | (_) | |  | |_) | | | |
+  |____/|_| |_|\__,_| \___| |_|  |_|\___/|_|  | .__/|_| |_|
+                                              |_|          
   Data plumbing without the tears.
 "#;
 
 const TIPS: &[&str] = &[
     "💡 Pro-tip: Use `??` to provide fallback defaults. Null crashes are so 2015.",
     "💡 Pro-tip: You can filter arrays with `where`, like `from .users[] where .age >= 18 select { ... }`.",
-    "💡 Pro-tip: Pipe curl straight into Shae: `curl -s https://api.com/data | shae run transform.shae`.",
+    "💡 Pro-tip: Pipe curl straight into Shae Morph: `curl -s https://api.com/data | shae-morph run transform.shae`.",
     "💡 Pro-tip: Transform strings effortlessly with `.trim().uppercase()` or `.capitalize()`.",
     "💡 Pro-tip: Convert string numbers from sloppy APIs using `.toInt()` or `.toNumber()`.",
 ];
 
 #[derive(Parser, Debug)]
-#[command(name = "shae")]
+#[command(name = "shae-morph")]
 #[command(version = "0.1.0")]
 #[command(
-    about = "Shae — Structural Data Transformation & JSON Plumbing Language",
+    about = "Shae Morph — Structural Data Transformation & JSON Plumbing Language",
     before_help = BANNER
 )]
 struct Cli {
@@ -96,9 +97,9 @@ fn main() {
                 let stdin = io::stdin();
                 // Check if user is running interactively in terminal without piping
                 if stdin.is_terminal() {
-                    eprintln!("🤔 Shae is waiting for JSON input from stdin...");
-                    eprintln!("👉 Tip: Pass a JSON file: `shae run {} data.json`", script.display());
-                    eprintln!("👉 Or pipe into it: `cat data.json | shae run {}`", script.display());
+                    eprintln!("🤔 Shae Morph is waiting for JSON input from stdin...");
+                    eprintln!("👉 Tip: Pass a JSON file: `shae-morph run {} data.json`", script.display());
+                    eprintln!("👉 Or pipe into it: `cat data.json | shae-morph run {}`", script.display());
                 }
 
                 let mut buffer = String::new();
@@ -142,9 +143,9 @@ fn main() {
         }
         None => {
             println!("{}", BANNER);
-            println!("Usage: shae run <script.shae> [input.json]");
-            println!("       cat data.json | shae run <script.shae>");
-            println!("\nRun `shae --help` for full options, or `shae --tip` for a friendly hint!");
+            println!("Usage: shae-morph run <script.shae> [input.json]");
+            println!("       cat data.json | shae-morph run <script.shae>");
+            println!("\nRun `shae-morph --help` for full options, or `shae-morph --tip` for a friendly hint!");
         }
     }
 }

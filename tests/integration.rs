@@ -1,5 +1,5 @@
 use serde_json::json;
-use shae::transform;
+use shae_morph::transform;
 
 #[test]
 fn test_shae_basic_object_transform() {
