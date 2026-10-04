@@ -1,0 +1,8 @@
+out ActiveContributors = from .payload.events[] 
+    where .type == "PushEvent" and .actor.contributions >= 5 and not .actor.bot 
+    select {
+        contributor: .actor.login.trim().capitalize(),
+        badge: "Top Contributor (" + .actor.contributions.toString() + " commits)",
+        recent_repo: .repo.name,
+        contact: .actor.email ?? "no-public-email"
+    }

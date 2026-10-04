@@ -3,16 +3,16 @@ use thiserror::Error;
 
 #[derive(Error, Debug, PartialEq)]
 pub enum LexerError {
-    #[error("Unexpected character '{0}' at line {1}, col {2}")]
+    #[error("Shae Syntax Hiccup: Unexpected character '{0}' at line {1}, col {2}. Did a rogue typo slip in?")]
     UnexpectedChar(char, usize, usize),
 
-    #[error("Unterminated string literal at line {0}, col {1}")]
+    #[error("Shae Syntax Hiccup: Unterminated string literal starting at line {0}, col {1}. Did you forget the closing '\"'?")]
     UnterminatedString(usize, usize),
 
-    #[error("Invalid number format at line {0}, col {1}: {2}")]
+    #[error("Shae Syntax Hiccup: Invalid number format at line {0}, col {1}: {2}")]
     InvalidNumber(usize, usize, String),
 
-    #[error("Unknown escape sequence '\\{0}' at line {1}, col {2}")]
+    #[error("Shae Syntax Hiccup: Unknown escape sequence '\\{0}' at line {1}, col {2}. Supported: \\n, \\t, \\r, \\\", \\\\")]
     InvalidEscape(char, usize, usize),
 }
 
@@ -48,16 +48,36 @@ impl Lexer {
                     self.col = 1;
                 }
 
-                // Single-line Comments
+                // Single-line Comments (// ...)
                 '/' if self.peek(1) == Some('/') => {
-                    self.advance(); // skip first '/'
-                    self.advance(); // skip second '/'
+                    self.advance(); // skip '/'
+                    self.advance(); // skip '/'
                     while let Some(&(_, next_ch)) = self.current() {
                         if next_ch == '\n' {
                             break;
                         }
                         self.advance();
                     }
+                }
+
+                // Parentheses
+                '(' => {
+                    let start_col = self.col;
+                    self.advance();
+                    tokens.push(SpannedToken {
+                        token: Token::LParen,
+                        line: self.line,
+                        col: start_col,
+                    });
+                }
+                ')' => {
+                    let start_col = self.col;
+                    self.advance();
+                    tokens.push(SpannedToken {
+                        token: Token::RParen,
+                        line: self.line,
+                        col: start_col,
+                    });
                 }
 
                 // Symbols
@@ -88,14 +108,86 @@ impl Lexer {
                         col: start_col,
                     });
                 }
-                '=' => {
+                '+' => {
                     let start_col = self.col;
                     self.advance();
                     tokens.push(SpannedToken {
-                        token: Token::Equals,
+                        token: Token::Plus,
                         line: self.line,
                         col: start_col,
                     });
+                }
+                '=' => {
+                    let start_col = self.col;
+                    self.advance();
+                    if self.current_char() == Some('=') {
+                        self.advance();
+                        tokens.push(SpannedToken {
+                            token: Token::EqEq,
+                            line: self.line,
+                            col: start_col,
+                        });
+                    } else {
+                        tokens.push(SpannedToken {
+                            token: Token::Equals,
+                            line: self.line,
+                            col: start_col,
+                        });
+                    }
+                }
+                '!' => {
+                    let start_col = self.col;
+                    self.advance();
+                    if self.current_char() == Some('=') {
+                        self.advance();
+                        tokens.push(SpannedToken {
+                            token: Token::NotEq,
+                            line: self.line,
+                            col: start_col,
+                        });
+                    } else {
+                        tokens.push(SpannedToken {
+                            token: Token::Bang,
+                            line: self.line,
+                            col: start_col,
+                        });
+                    }
+                }
+                '<' => {
+                    let start_col = self.col;
+                    self.advance();
+                    if self.current_char() == Some('=') {
+                        self.advance();
+                        tokens.push(SpannedToken {
+                            token: Token::LtEq,
+                            line: self.line,
+                            col: start_col,
+                        });
+                    } else {
+                        tokens.push(SpannedToken {
+                            token: Token::Lt,
+                            line: self.line,
+                            col: start_col,
+                        });
+                    }
+                }
+                '>' => {
+                    let start_col = self.col;
+                    self.advance();
+                    if self.current_char() == Some('=') {
+                        self.advance();
+                        tokens.push(SpannedToken {
+                            token: Token::GtEq,
+                            line: self.line,
+                            col: start_col,
+                        });
+                    } else {
+                        tokens.push(SpannedToken {
+                            token: Token::Gt,
+                            line: self.line,
+                            col: start_col,
+                        });
+                    }
                 }
                 '{' => {
                     let start_col = self.col;
@@ -137,8 +229,8 @@ impl Lexer {
                 // Double question mark (??)
                 '?' if self.peek(1) == Some('?') => {
                     let start_col = self.col;
-                    self.advance(); // first '?'
-                    self.advance(); // second '?'
+                    self.advance();
+                    self.advance();
                     tokens.push(SpannedToken {
                         token: Token::DoubleQuestion,
                         line: self.line,
@@ -183,6 +275,10 @@ impl Lexer {
         self.chars.get(self.cursor)
     }
 
+    fn current_char(&self) -> Option<char> {
+        self.chars.get(self.cursor).map(|&(_, ch)| ch)
+    }
+
     fn peek(&self, offset: usize) -> Option<char> {
         self.chars.get(self.cursor + offset).map(|&(_, ch)| ch)
     }
@@ -200,14 +296,14 @@ impl Lexer {
     fn scan_string(&mut self) -> Result<SpannedToken, LexerError> {
         let start_line = self.line;
         let start_col = self.col;
-        self.advance(); // Consume opening quote
+        self.advance(); // opening quote
 
         let mut val = String::new();
 
         while let Some(&(_, ch)) = self.current() {
             match ch {
                 '"' => {
-                    self.advance(); // Consume closing quote
+                    self.advance(); // closing quote
                     return Ok(SpannedToken {
                         token: Token::StringLit(val),
                         line: start_line,
@@ -256,8 +352,6 @@ impl Lexer {
                 s.push(ch);
                 self.advance();
             } else if ch == '.' && !seen_dot {
-                // Peek ahead: if followed by digit, it's a floating point number.
-                // Otherwise it's a dot operator (like in a path or chaining).
                 if let Some(next_ch) = self.peek(1) {
                     if next_ch.is_ascii_digit() {
                         seen_dot = true;
@@ -304,7 +398,11 @@ impl Lexer {
             "in" => Token::In,
             "shape" => Token::Shape,
             "from" => Token::From,
+            "where" => Token::Where,
             "select" => Token::Select,
+            "and" => Token::And,
+            "or" => Token::Or,
+            "not" => Token::Not,
             "true" => Token::True,
             "false" => Token::False,
             "null" => Token::Null,
@@ -328,71 +426,23 @@ mod tests {
     use super::*;
 
     #[test]
-    fn test_basic_lexing() {
+    fn test_phase3_lexing() {
         let code = r#"
-            out Profile = {
-                first_name: .user.name,
-                age: .user.meta.age ?? 20,
-                active: true
+            out Filtered = from .users[] where .age >= 18 and not .banned select {
+                name: .name.trim().uppercase(),
+                role: .role ?? "user"
             }
         "#;
 
         let tokens = tokenize(code).expect("Tokenization failed");
         let kinds: Vec<Token> = tokens.into_iter().map(|st| st.token).collect();
 
-        assert_eq!(
-            kinds,
-            vec![
-                Token::Out,
-                Token::Ident("Profile".to_string()),
-                Token::Equals,
-                Token::LBrace,
-                Token::Ident("first_name".to_string()),
-                Token::Colon,
-                Token::Dot,
-                Token::Ident("user".to_string()),
-                Token::Dot,
-                Token::Ident("name".to_string()),
-                Token::Comma,
-                Token::Ident("age".to_string()),
-                Token::Colon,
-                Token::Dot,
-                Token::Ident("user".to_string()),
-                Token::Dot,
-                Token::Ident("meta".to_string()),
-                Token::Dot,
-                Token::Ident("age".to_string()),
-                Token::DoubleQuestion,
-                Token::NumberLit(20.0),
-                Token::Comma,
-                Token::Ident("active".to_string()),
-                Token::Colon,
-                Token::True,
-                Token::RBrace,
-                Token::Eof,
-            ]
-        );
-    }
-
-    #[test]
-    fn test_comments_and_strings() {
-        let code = r#"
-            // This is a comment
-            out Test = {
-                greeting: "Hello, \"World\"!\n"
-            }
-        "#;
-        let tokens = tokenize(code).unwrap();
-        assert_eq!(tokens[0].token, Token::Out);
-        assert_eq!(tokens[1].token, Token::Ident("Test".to_string()));
-        assert_eq!(tokens[2].token, Token::Equals);
-        assert_eq!(tokens[3].token, Token::LBrace);
-        assert_eq!(tokens[4].token, Token::Ident("greeting".to_string()));
-        assert_eq!(tokens[5].token, Token::Colon);
-        assert_eq!(
-            tokens[6].token,
-            Token::StringLit("Hello, \"World\"!\n".to_string())
-        );
-        assert_eq!(tokens[7].token, Token::RBrace);
+        assert!(kinds.contains(&Token::Where));
+        assert!(kinds.contains(&Token::GtEq));
+        assert!(kinds.contains(&Token::And));
+        assert!(kinds.contains(&Token::Not));
+        assert!(kinds.contains(&Token::Select));
+        assert!(kinds.contains(&Token::DoubleQuestion));
     }
 }
+

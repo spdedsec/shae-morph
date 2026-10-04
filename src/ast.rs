@@ -24,10 +24,43 @@ pub enum Expr {
         left: Box<Expr>,
         right: Box<Expr>,
     },
+    BinaryOp {
+        left: Box<Expr>,
+        op: BinaryOp,
+        right: Box<Expr>,
+    },
+    UnaryOp {
+        op: UnaryOp,
+        expr: Box<Expr>,
+    },
+    MethodCall {
+        target: Box<Expr>,
+        method: String,
+        args: Vec<Expr>,
+    },
     ArrayMap {
         source_path: Vec<String>,
+        filter: Option<Box<Expr>>,
         select_expr: Box<Expr>,
     },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum BinaryOp {
+    Add,    // +
+    Eq,     // ==
+    NotEq,  // !=
+    Lt,     // <
+    LtEq,   // <=
+    Gt,     // >
+    GtEq,   // >=
+    And,    // and
+    Or,     // or
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum UnaryOp {
+    Not,    // not, !
 }
 
 #[derive(Debug, Clone, PartialEq)]

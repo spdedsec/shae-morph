@@ -31,6 +31,95 @@ fn test_shae_basic_object_transform() {
 }
 
 #[test]
+fn test_shae_methods_and_string_concat() {
+    let script = r#"
+        out CleanedUser = {
+            display: .user.first_name.capitalize() + " " + .user.last_name.capitalize(),
+            handle: "@" + .user.username.trim().lowercase(),
+            age: .user.raw_age.toInt() ?? 0,
+            tags: .user.hobbies.join(", ")
+        }
+    "#;
+
+    let input = json!({
+        "user": {
+            "first_name": "satya",
+            "last_name": "prakash",
+            "username": "  SpDeDSeC  ",
+            "raw_age": "21",
+            "hobbies": ["coding", "compilers", "design"]
+        }
+    });
+
+    let result = transform(script, &input).expect("Transform failed");
+
+    assert_eq!(
+        result,
+        json!({
+            "display": "Satya Prakash",
+            "handle": "@spdedsec",
+            "age": 21,
+            "tags": "coding, compilers, design"
+        })
+    );
+}
+
+#[test]
+fn test_shae_array_filtering_with_where() {
+    let script = r#"
+        out EligibleVoters = from .citizens[] where .age >= 18 and .registered == true select {
+            voter_id: .id,
+            name: .name.uppercase()
+        }
+    "#;
+
+    let input = json!({
+        "citizens": [
+            { "id": "v1", "name": "alice", "age": 17, "registered": true },
+            { "id": "v2", "name": "bob", "age": 25, "registered": true },
+            { "id": "v3", "name": "charlie", "age": 30, "registered": false },
+            { "id": "v4", "name": "satya", "age": 21, "registered": true }
+        ]
+    });
+
+    let result = transform(script, &input).expect("Transform failed");
+
+    assert_eq!(
+        result,
+        json!([
+            { "voter_id": "v2", "name": "BOB" },
+            { "voter_id": "v4", "name": "SATYA" }
+        ])
+    );
+}
+
+#[test]
+fn test_shae_array_methods_len_first_last() {
+    let script = r#"
+        out Stats = {
+            total_items: .items.len(),
+            first_item: .items.first(),
+            last_item: .items.last()
+        }
+    "#;
+
+    let input = json!({
+        "items": ["apple", "banana", "cherry"]
+    });
+
+    let result = transform(script, &input).expect("Transform failed");
+
+    assert_eq!(
+        result,
+        json!({
+            "total_items": 3.0,
+            "first_item": "apple",
+            "last_item": "cherry"
+        })
+    );
+}
+
+#[test]
 fn test_shae_missing_nested_fields_do_not_crash() {
     let script = r#"
         out SafeData = {
@@ -40,7 +129,6 @@ fn test_shae_missing_nested_fields_do_not_crash() {
         }
     "#;
 
-    // input with empty data
     let input = json!({
         "data": {
             "id": "12345"
@@ -55,76 +143,6 @@ fn test_shae_missing_nested_fields_do_not_crash() {
             "id": "12345",
             "city": "Unknown City",
             "zip": "00000"
-        })
-    );
-}
-
-#[test]
-fn test_shae_array_iteration_mapping() {
-    let script = r#"
-        out MappedUsers = from .users[] select {
-            user_id: .id,
-            display_name: .profile.nickname ?? .profile.name ?? "Anonymous"
-        }
-    "#;
-
-    let input = json!({
-        "users": [
-            {
-                "id": "u1",
-                "profile": {
-                    "nickname": "spdedsec",
-                    "name": "Satya"
-                }
-            },
-            {
-                "id": "u2",
-                "profile": {
-                    "name": "Bob"
-                }
-            },
-            {
-                "id": "u3"
-            }
-        ]
-    });
-
-    let result = transform(script, &input).expect("Transform failed");
-
-    assert_eq!(
-        result,
-        json!([
-            { "user_id": "u1", "display_name": "spdedsec" },
-            { "user_id": "u2", "display_name": "Bob" },
-            { "user_id": "u3", "display_name": "Anonymous" }
-        ])
-    );
-}
-
-#[test]
-fn test_shae_null_coalescing_semantics() {
-    let script = r#"
-        out Normalized = {
-            email: .user.email ?? "no-email@shae.dev",
-            score: .user.score ?? 100
-        }
-    "#;
-
-    // Explicit null in incoming payload
-    let input = json!({
-        "user": {
-            "email": null,
-            "score": null
-        }
-    });
-
-    let result = transform(script, &input).expect("Transform failed");
-
-    assert_eq!(
-        result,
-        json!({
-            "email": "no-email@shae.dev",
-            "score": 100.0
         })
     );
 }

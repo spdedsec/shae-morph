@@ -7,7 +7,11 @@ pub enum Token {
     In,
     Shape,
     From,
+    Where,
     Select,
+    And,
+    Or,
+    Not,
     True,
     False,
     Null,
@@ -26,7 +30,17 @@ pub enum Token {
     RBrace,         // }
     LBracket,       // [
     RBracket,       // ]
+    LParen,         // (
+    RParen,         // )
     DoubleQuestion, // ??
+    Plus,           // +
+    EqEq,           // ==
+    NotEq,          // !=
+    Lt,             // <
+    LtEq,           // <=
+    Gt,             // >
+    GtEq,           // >=
+    Bang,           // !
 
     Eof,
 }
@@ -34,14 +48,18 @@ pub enum Token {
 impl fmt::Display for Token {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Token::Out => write!(f, "out"),
-            Token::In => write!(f, "in"),
-            Token::Shape => write!(f, "shape"),
-            Token::From => write!(f, "from"),
-            Token::Select => write!(f, "select"),
-            Token::True => write!(f, "true"),
-            Token::False => write!(f, "false"),
-            Token::Null => write!(f, "null"),
+            Token::Out => write!(f, "'out'"),
+            Token::In => write!(f, "'in'"),
+            Token::Shape => write!(f, "'shape'"),
+            Token::From => write!(f, "'from'"),
+            Token::Where => write!(f, "'where'"),
+            Token::Select => write!(f, "'select'"),
+            Token::And => write!(f, "'and'"),
+            Token::Or => write!(f, "'or'"),
+            Token::Not => write!(f, "'not'"),
+            Token::True => write!(f, "'true'"),
+            Token::False => write!(f, "'false'"),
+            Token::Null => write!(f, "'null'"),
             Token::Ident(s) => write!(f, "identifier '{}'", s),
             Token::StringLit(s) => write!(f, "string \"{}\"", s),
             Token::NumberLit(n) => write!(f, "number {}", n),
@@ -53,7 +71,17 @@ impl fmt::Display for Token {
             Token::RBrace => write!(f, "'}}'"),
             Token::LBracket => write!(f, "'['"),
             Token::RBracket => write!(f, "']'"),
+            Token::LParen => write!(f, "'('"),
+            Token::RParen => write!(f, "')'"),
             Token::DoubleQuestion => write!(f, "'??'"),
+            Token::Plus => write!(f, "'+'"),
+            Token::EqEq => write!(f, "'=='"),
+            Token::NotEq => write!(f, "'!='"),
+            Token::Lt => write!(f, "'<'"),
+            Token::LtEq => write!(f, "'<='"),
+            Token::Gt => write!(f, "'>'"),
+            Token::GtEq => write!(f, "'>='"),
+            Token::Bang => write!(f, "'!'"),
             Token::Eof => write!(f, "end of file"),
         }
     }

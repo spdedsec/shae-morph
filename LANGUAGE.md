@@ -59,14 +59,23 @@ out Profile = {
 }
 ```
 
-### Implicit Array Mapping
+### Implicit Array Mapping & Filtering (`where`)
 ```shae
-out DatabaseRows = from .data.customers[] select {
-    user_id: .id,
-    full_name: .meta.name ?? "Unknown User",
-    contact_email: .meta.email ?? "no-email@customer.io"
-}
+out ActiveContributors = from .payload.events[] 
+    where .type == "PushEvent" and .actor.contributions >= 5 and not .actor.bot 
+    select {
+        contributor: .actor.login.trim().capitalize(),
+        badge: "Top Contributor (" + .actor.contributions.toString() + " commits)",
+        recent_repo: .repo.name,
+        contact: .actor.email ?? "no-public-email"
+    }
 ```
+
+### Standard Library Methods (Method Chaining)
+- **Strings**: `.uppercase()`, `.lowercase()`, `.trim()`, `.capitalize()`, `.split(delimiter)`, `.replace(from, to)`, `.contains(sub)`, `.startsWith(prefix)`, `.endsWith(suffix)`, `.len()`, `.toInt()`, `.toNumber()`
+- **Numbers**: `.toString()`, `.toInt()`, `.round()`, `.floor()`, `.ceil()`, `.abs()`
+- **Arrays**: `.len()`, `.first()`, `.last()`, `.reverse()`, `.join(delimiter)`
+- **Objects**: `.keys()`, `.values()`, `.len()`
 
 ### CLI Usage
 ```bash
@@ -78,4 +87,7 @@ cat input.json | shae run transform.shae
 
 # Output compact JSON
 cat input.json | shae run transform.shae --compact
+
+# Get a friendly pro-tip
+shae --tip
 ```
