@@ -1,0 +1,6 @@
+out Profile = {
+    first_name: .user.name,
+    age: .user.meta.age ?? 20,
+    role: .user.role ?? "Member",
+    is_active: true
+}

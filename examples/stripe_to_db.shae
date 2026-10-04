@@ -1,0 +1,5 @@
+out DatabaseRows = from .data.customers[] select {
+    user_id: .id,
+    full_name: .meta.name ?? "Unknown User",
+    contact_email: .meta.email ?? "no-email@customer.io"
+}

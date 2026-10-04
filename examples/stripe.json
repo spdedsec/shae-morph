@@ -1,0 +1,22 @@
+{
+  "data": {
+    "customers": [
+      {
+        "id": "cus_101",
+        "meta": {
+          "name": "Satya",
+          "email": "satya@example.com"
+        }
+      },
+      {
+        "id": "cus_102",
+        "meta": {
+          "name": "Alex"
+        }
+      },
+      {
+        "id": "cus_103"
+      }
+    ]
+  }
+}
