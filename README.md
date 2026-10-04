@@ -1,4 +1,4 @@
-# Shae (`shae-lang`)
+# Shae
 
 [![Build & Test](https://img.shields.io/badge/tests-11%20passed-brightgreen)]()
 [![Rust](https://img.shields.io/badge/rust-2024%20edition-orange)]()
@@ -23,8 +23,8 @@ Instead of writing verbose structs in Go/Rust, handling brittle `undefined` erro
 
 ```bash
 # Clone and build
-git clone https://github.com/spdedsec/shae-lang.git
-cd shae-lang
+git clone https://github.com/spdedsec/shae.git
+cd shae
 cargo build --release
 
 # The compiled binary is located at target/release/shae
